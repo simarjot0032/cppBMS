@@ -98,7 +98,6 @@ public:
             while (true)
             {
                 SIZE size;
-
                 int raccno;
                 double rintrestRate, rBalance;
                 long rphoneno;

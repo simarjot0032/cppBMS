@@ -207,7 +207,8 @@ public:
         catch (runtime_error)
         {
             cout << "Enter a valid PAN number" << endl;
-            return;
+            // return;
+            exit;
         }
         cout << "Enter your password (Minimum 8 characters long) -> ";
         try
@@ -226,49 +227,8 @@ public:
     virtual void displayAccount(int accno)
     {
 
-        // ifstream inFile("accounts.dat");
-        // if (!inFile)
-        // {
-        //     cerr << "Error opening file for reading!" << endl;
-        //     return;
-        // }
-
         cout << "Loading accounts from file:" << endl;
         cout << "Account No | Phone No | Account Type | Name | Email | PAN card number | Password | Intrest Rate | Balance" << endl;
-
-        // while (true)
-        // {
-        //     int raccountNumber;
-        //     long rphoneNumber;
-        //     char raccountType;
-        //     string rname, remail, rpanCardNumber, rpassword;
-        //     double rinterestRate, rbalance;
-        //     SIZE size;
-        //     if (!inFile.read(reinterpret_cast<char *>(&raccountNumber), sizeof(raccountNumber)))
-        //         break;
-
-        //     inFile.read(reinterpret_cast<char *>(&rphoneNumber), sizeof(rphoneNumber));
-        //     inFile.read(reinterpret_cast<char *>(&raccountType), sizeof(raccountType));
-        //     inFile.read(reinterpret_cast<char *>(&size.nameSize), sizeof(size.nameSize));
-        //     rname.resize(size.nameSize);
-        //     inFile.read(&rname[0], size.nameSize);
-        //     inFile.read(reinterpret_cast<char *>(&size.emailSize), sizeof(size.emailSize));
-        //     remail.resize(size.emailSize);
-        //     inFile.read(&remail[0], size.emailSize);
-        //     inFile.read(reinterpret_cast<char *>(&size.pancardsizeSize), sizeof(size.pancardsizeSize));
-        //     rpanCardNumber.resize(size.pancardsizeSize);
-        //     inFile.read(&rpanCardNumber[0], size.pancardsizeSize);
-        //     inFile.read(reinterpret_cast<char *>(&size.passwordSize), sizeof(size.passwordSize));
-        //     rpassword.resize(size.passwordSize);
-        //     inFile.read(&rpassword[0], size.passwordSize);
-        //     inFile.read(reinterpret_cast<char *>(&rinterestRate), sizeof(rinterestRate));
-        //     inFile.read(reinterpret_cast<char *>(&rbalance), sizeof(rbalance));
-
-        //     cout << raccountNumber << " | " << rphoneNumber << " | " << raccountType << " | "
-        //          << rname << " | " << remail << " | " << rpanCardNumber << " | "
-        //          << rpassword << " | " << rinterestRate << " | " << rbalance << endl;
-        // }
-        // inFile.close();
 
         readData(accno);
     }
@@ -323,6 +283,7 @@ public:
                     depFile.write(reinterpret_cast<char *>(&rBalance), sizeof(rBalance));
                     updated = true;
                     lg.balance = rBalance;
+                    cout << lg.balance;
                     break;
                 }
                 else
@@ -720,9 +681,6 @@ public:
                 return;
             }
             cout << "Your account has been successfully deleted." << endl;
-
-            // welcome(BA);
-            cout << "BYE!";
         }
         else
         {
@@ -1186,7 +1144,7 @@ void welcome(BankAccount BA)
     }
 }
 
-void loggedIN(BankAccount BA, bool auth)
+void loggedIN(bool auth)
 {
     cout << "Enter the choice from the following:- " << endl;
     cout << "1. Enter 1 for displaying your account details." << endl;
@@ -1200,9 +1158,9 @@ void loggedIN(BankAccount BA, bool auth)
     int userchoice;
     cin >> userchoice;
 
-    CurrentAccount CA;
     if (auth)
     {
+        BankAccount BA;
         SavingAccount SA(auth);
         CurrentAccount CA(auth);
         switch (userchoice)
@@ -1353,7 +1311,7 @@ void login(BankAccount &b)
             if (caccno == userloginaccnumber && userloginpass == cpassword)
             {
                 cout << "User Found logged in";
-                loggedIN(b, auth);
+                loggedIN(auth);
             }
             else
             {
@@ -1369,6 +1327,7 @@ void logout()
 }
 int main()
 {
+
     BankAccount BA;
     welcome(BA);
 }

@@ -1,24 +1,14 @@
-/*
-Topics used this project
-- herichary inheritance
-- file handling
-- string handling
-- excption handling
-- static keywords
-- runtime error
-- virtual function
-- polymorphism
-- constructors
-- function defination inside the class i.e. inline
-- also functioni defination using scpoe resoultion operator
-- using stringstream
-- using break continue i.e. jumping statement
-*/
 #include <iostream>
 #include <fstream>
 #include <string.h>
 #include <stdexcept>
 #include <string>
+#include <ctime>
+time_t currentTime = std::time(nullptr);
+class BankAccount;
+void welcome(BankAccount BA);
+void login(BankAccount &b);
+void loggedIN(bool auth);
 using namespace std;
 struct LOGGEDINDETAILS
 {
@@ -145,7 +135,7 @@ public:
                     cout << raccno << " | " << rphoneno << " | " << racctype << " | "
                          << rname << " | " << remail << " | " << rpancardno << " | "
                          << rpassword << " | " << rintrestRate << " | " << rBalance << endl;
-                    // inFile.close();
+
                     break;
                 }
                 else
@@ -184,7 +174,7 @@ public:
         loadLastAccountNumber();
         userAccountNumber = generateAccountNumber();
 
-        cout << "Account Number -> " << userAccountNumber;
+        cout << "Account Number -> " << userAccountNumber << endl;
         cout << "Enter your name -> ";
         cin >> name;
         cout << "Enter your phone number -> ";
@@ -210,11 +200,11 @@ public:
             // return;
             exit;
         }
-        cout << "Enter your password (Minimum 8 characters long) -> ";
+        cout << "Enter your password ( 8 characters long) -> ";
         try
         {
             cin >> password;
-            if (password.length() < 8)
+            if (password.length() != 8)
             {
                 throw "e";
             }
@@ -276,14 +266,14 @@ public:
 
                     depFile.read(reinterpret_cast<char *>(&rInterestRate), sizeof(rInterestRate));
                     depFile.read(reinterpret_cast<char *>(&rBalance), sizeof(rBalance));
-                    cout << "Enter the amount you want to deposit";
+                    cout << "Enter the amount you want to deposit -> ";
                     cin >> depMoney;
                     rBalance += depMoney;
                     depFile.seekp(-sizeof(rBalance), ios::cur);
                     depFile.write(reinterpret_cast<char *>(&rBalance), sizeof(rBalance));
                     updated = true;
                     lg.balance = rBalance;
-                    cout << lg.balance;
+
                     break;
                 }
                 else
@@ -311,7 +301,8 @@ public:
             if (updated)
             {
                 cout << "Money deposit sucessfull" << endl;
-                cout << "The updated balance is -> " << lg.balance;
+                cout << "The updated balance is -> " << lg.balance << endl;
+                loggedIN(true);
             }
         }
     }
@@ -334,12 +325,14 @@ public:
             double wintrestRate, wbalance;
             string wname, wemail, wpassword, wpanCardNo;
             char wacctype;
-
+            streampos recordStartPos = withFile.tellg();
             if (!withFile.read(reinterpret_cast<char *>(&waccno), sizeof(waccno)))
             {
                 cout << "404!" << endl;
                 break;
             }
+            cout << lg.accno << " " << waccno << endl;
+
             if (waccno == lg.accno)
             {
                 withFile.read(reinterpret_cast<char *>(&wphoneno), sizeof(wphoneno));
@@ -356,22 +349,33 @@ public:
                 withFile.read(reinterpret_cast<char *>(&size.passwordSize), sizeof(size.passwordSize));
                 wpassword.resize(size.passwordSize);
                 withFile.read(&wpassword[0], size.passwordSize);
+
                 withFile.read(reinterpret_cast<char *>(&wintrestRate), sizeof(wintrestRate));
+                streampos recordcurrentPos = withFile.tellg();
                 withFile.read(reinterpret_cast<char *>(&wbalance), sizeof(wbalance));
-                cout << "Enter the amount you want to withdraw";
+                cout << "Enter the amount you want to withdraw -> ";
                 cin >> witMoney;
                 if (lg.acctype == 's')
                 {
                     if (wbalance - witMoney >= 2000)
                     {
                         wbalance -= witMoney;
-                        withFile.seekp(-sizeof(wbalance), ios::cur);
+                        streampos balancePosition = recordStartPos + recordcurrentPos;
+
+                        withFile.seekp(balancePosition);
                         withFile.write(reinterpret_cast<char *>(&wbalance), sizeof(wbalance));
-                        updated = true;
+                        if (!withFile.fail())
+                        {
+                            updated = true;
+                            cout << "Withdrawl sucessfull";
+                            break;
+                        }
                     }
                     else
                     {
-                        cout << "Innsufficient Balance" << endl;
+                        cout << "Insufficient Balance" << endl;
+
+                        break;
                     }
                 }
                 else if (lg.acctype == 'c')
@@ -381,11 +385,17 @@ public:
                         wbalance -= witMoney;
                         withFile.seekp(-sizeof(wbalance), ios::cur);
                         withFile.write(reinterpret_cast<char *>(&wbalance), sizeof(wbalance));
+
                         updated = true;
+                        cout << "withdrawal sucessful";
+
+                        break;
                     }
                     else
                     {
                         cout << "Innsufficient Balance" << endl;
+
+                        break;
                     }
                 }
             }
@@ -409,6 +419,8 @@ public:
                 withFile.seekg(sizeof(wintrestRate) + sizeof(wbalance), ios::cur);
             }
         }
+        withFile.close();
+        loggedIN(true);
     }
     virtual void transfer()
     {
@@ -430,6 +442,7 @@ public:
             (lg.acctype == 'c' && lg.balance - transferAmount < 5000))
         {
             cout << "Insufficient balance to make the transfer." << endl;
+            loggedIN(true);
             return;
         }
 
@@ -487,7 +500,7 @@ public:
                 accFile.seekp(-sizeof(balance), ios::cur);
                 accFile.write(reinterpret_cast<char *>(&balance), sizeof(balance));
                 senderUpdated = true;
-                // Reset stream to beginning for next read
+
                 accFile.seekg(0, ios::beg);
                 continue;
             }
@@ -516,6 +529,7 @@ public:
         if (senderUpdated && recipientUpdated)
         {
             cout << "Transfer successful. Your updated balance is: " << lg.balance << endl;
+            loggedIN(true);
         }
         else if (!recipientUpdated)
         {
@@ -579,6 +593,7 @@ public:
         else
         {
             cout << "An error occurred during the transfer. Please try again." << endl;
+            loggedIN(true);
         }
     }
 
@@ -719,10 +734,12 @@ public:
             return;
         }
 
-        fstream accFile("accounts.dat", ios::in | ios::out | ios::binary);
-        if (!accFile)
+        ifstream inFile("accounts.dat", ios::binary);
+        ofstream outFile("accounts_temp.dat", ios::binary);
+
+        if (!inFile || !outFile)
         {
-            cout << "Error opening accounts file." << endl;
+            cout << "Error opening file." << endl;
             return;
         }
 
@@ -736,50 +753,78 @@ public:
             string name, email, panCard, password;
             double interestRate, balance;
             SIZE size;
-            streampos recordStartPos = accFile.tellg();
 
-            if (!accFile.read(reinterpret_cast<char *>(&accNo), sizeof(accNo)))
+            if (!inFile.read(reinterpret_cast<char *>(&accNo), sizeof(accNo)))
                 break;
 
-            accFile.read(reinterpret_cast<char *>(&phoneNo), sizeof(phoneNo));
-            accFile.read(reinterpret_cast<char *>(&accType), sizeof(accType));
+            inFile.read(reinterpret_cast<char *>(&phoneNo), sizeof(phoneNo));
+            inFile.read(reinterpret_cast<char *>(&accType), sizeof(accType));
 
-            accFile.read(reinterpret_cast<char *>(&size.nameSize), sizeof(size.nameSize));
+            inFile.read(reinterpret_cast<char *>(&size.nameSize), sizeof(size.nameSize));
             name.resize(size.nameSize);
-            accFile.read(&name[0], size.nameSize);
+            inFile.read(&name[0], size.nameSize);
 
-            accFile.read(reinterpret_cast<char *>(&size.emailSize), sizeof(size.emailSize));
+            inFile.read(reinterpret_cast<char *>(&size.emailSize), sizeof(size.emailSize));
             email.resize(size.emailSize);
-            accFile.read(&email[0], size.emailSize);
+            inFile.read(&email[0], size.emailSize);
 
-            accFile.read(reinterpret_cast<char *>(&size.pancardsizeSize), sizeof(size.pancardsizeSize));
+            inFile.read(reinterpret_cast<char *>(&size.pancardsizeSize), sizeof(size.pancardsizeSize));
             panCard.resize(size.pancardsizeSize);
-            accFile.read(&panCard[0], size.pancardsizeSize);
+            inFile.read(&panCard[0], size.pancardsizeSize);
 
-            accFile.read(reinterpret_cast<char *>(&size.passwordSize), sizeof(size.passwordSize));
+            inFile.read(reinterpret_cast<char *>(&size.passwordSize), sizeof(size.passwordSize));
             password.resize(size.passwordSize);
-            accFile.read(&password[0], size.passwordSize);
+            inFile.read(&password[0], size.passwordSize);
 
+            inFile.read(reinterpret_cast<char *>(&interestRate), sizeof(interestRate));
+            inFile.read(reinterpret_cast<char *>(&balance), sizeof(balance));
+
+            // If this is the account to update
             if (accNo == lg.accno)
             {
-                int totalBytesToMoveBack = size.passwordSize + sizeof(size.passwordSize);
-                accFile.seekp(-totalBytesToMoveBack, ios::cur);
                 size.passwordSize = newPassword.size();
-                accFile.write(reinterpret_cast<char *>(&size.passwordSize), sizeof(size.passwordSize));
-                accFile.write(newPassword.c_str(), size.passwordSize);
+                password = newPassword;
                 passwordUpdated = true;
                 lg.password = newPassword;
                 cout << "Password changed successfully." << endl;
-                break;
             }
+
+            // Write the record to the temporary file
+            outFile.write(reinterpret_cast<char *>(&accNo), sizeof(accNo));
+            outFile.write(reinterpret_cast<char *>(&phoneNo), sizeof(phoneNo));
+            outFile.write(reinterpret_cast<char *>(&accType), sizeof(accType));
+
+            outFile.write(reinterpret_cast<char *>(&size.nameSize), sizeof(size.nameSize));
+            outFile.write(name.c_str(), size.nameSize);
+
+            outFile.write(reinterpret_cast<char *>(&size.emailSize), sizeof(size.emailSize));
+            outFile.write(email.c_str(), size.emailSize);
+
+            outFile.write(reinterpret_cast<char *>(&size.pancardsizeSize), sizeof(size.pancardsizeSize));
+            outFile.write(panCard.c_str(), size.pancardsizeSize);
+
+            outFile.write(reinterpret_cast<char *>(&size.passwordSize), sizeof(size.passwordSize));
+            outFile.write(password.c_str(), size.passwordSize);
+
+            outFile.write(reinterpret_cast<char *>(&interestRate), sizeof(interestRate));
+            outFile.write(reinterpret_cast<char *>(&balance), sizeof(balance));
         }
 
-        if (!passwordUpdated)
+        inFile.close();
+        outFile.close();
+
+        if (passwordUpdated)
+        {
+            // Replace the original file with the updated file
+            remove("accounts.dat");
+            rename("accounts_temp.dat", "accounts.dat");
+            loggedIN(true); // Continue to logged-in menu
+        }
+        else
         {
             cout << "An error occurred while changing the password." << endl;
+            remove("accounts_temp.dat");
         }
-
-        accFile.close();
     }
 };
 
@@ -879,15 +924,19 @@ void SavingAccount::createAccount(char t = 's')
         if (balance < min)
         {
             throw runtime_error("");
+            exit;
         }
     }
     catch (runtime_error)
     {
         cout << "Minimum balance is 2000" << endl;
+        return;
     }
     intrestRate = 3.0;
     cout << "The rate of intrest is 3%" << endl;
     BankAccount::writeDataToFile(accountNumber, phoneNumber, accountType, name, email, panCardNumber, password, intrestRate, balance);
+    BankAccount BA;
+    welcome(BA);
 }
 // Saving account display function
 void SavingAccount::displayAccount(int accno)
@@ -975,6 +1024,7 @@ void SavingAccount::displayAccount(int accno)
             }
 
             inFile.close();
+            loggedIN(true);
         }
     }
 }
@@ -991,15 +1041,18 @@ void CurrentAccount::createAccount(char t = 'c')
         if (balance < min)
         {
             throw runtime_error("");
+            exit;
         }
     }
     catch (runtime_error)
     {
         cout << "Minimum balance is 5000" << endl;
+        return;
     }
 
     intrestRate = 0;
     BankAccount::writeDataToFile(accountNumber, phoneNumber, accountType, name, email, panCardNumber, password, intrestRate, balance);
+    loggedIN(true);
 }
 void CurrentAccount::displayAccount(int accno)
 {
@@ -1089,6 +1142,7 @@ void CurrentAccount::displayAccount(int accno)
             inFile.close();
         }
     }
+    loggedIN(true);
 }
 
 // Structure for logged in details
@@ -1120,6 +1174,8 @@ void typeOfAccCreation()
 }
 void welcome(BankAccount BA)
 {
+    cout << "Current time: " << ctime(&currentTime);
+
     cout << "Welcome to out Bank!!" << endl;
     cout << "Enter 1 to login" << endl;
     cout << "Enter 2 to create a new bank account" << endl;
@@ -1138,6 +1194,7 @@ void welcome(BankAccount BA)
             typeOfAccCreation();
             break;
         case 3:
+            cout << "leaving BMS";
             break;
         }
         break;
@@ -1146,7 +1203,8 @@ void welcome(BankAccount BA)
 
 void loggedIN(bool auth)
 {
-    cout << "Enter the choice from the following:- " << endl;
+    cout << endl
+         << "Enter the choice from the following:- " << endl;
     cout << "1. Enter 1 for displaying your account details." << endl;
     cout << "2. Enter 2 for depositing money." << endl;
     cout << "3. Enter 3 for withdrawl money." << endl;
@@ -1214,10 +1272,10 @@ void loggedIN(bool auth)
 }
 void login(BankAccount &b)
 {
-    cout << "Enter your account number";
+    cout << "Enter your account number -> ";
     int userloginaccnumber;
     cin >> userloginaccnumber;
-    cout << "Enter your password";
+    cout << "Enter your password -> ";
     string userloginpass;
     cin >> userloginpass;
     ifstream checkFile("accounts.dat");
@@ -1311,6 +1369,7 @@ void login(BankAccount &b)
             if (caccno == userloginaccnumber && userloginpass == cpassword)
             {
                 cout << "User Found logged in";
+                cout << "Current time: " << ctime(&currentTime);
                 loggedIN(auth);
             }
             else
@@ -1330,4 +1389,5 @@ int main()
 
     BankAccount BA;
     welcome(BA);
+    return 0;
 }

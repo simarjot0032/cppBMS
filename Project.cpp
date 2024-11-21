@@ -642,7 +642,6 @@ void login(BankAccount &b)
     }
 }
 void logout() {}
-
 int main()
 {
     BankAccount BA;
